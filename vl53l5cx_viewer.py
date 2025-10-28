@@ -15,10 +15,10 @@ def main():
     print(f"Connected to {args.port}")
 
     fig, ax = plt.subplots()
-    data = np.zeros((8,8))
+    data = np.zeros((4,4))
     im = ax.imshow(data, vmin=0, vmax=3000, cmap="turbo", interpolation="nearest")
     plt.colorbar(im, label="Distance (mm)")
-    ax.set_title("VL53L5CX — 8×8 Live Distance Heatmap")
+    ax.set_title("VL53L5CX — 4×4 Live Distance Heatmap")
 
     line_pattern = re.compile(r"^D:([0-9,]+)$")
 
@@ -29,12 +29,17 @@ def main():
         m = line_pattern.match(line)
         if m:
             vals = [int(x) for x in m.group(1).split(",")]
-            if len(vals) == 64:
-                arr = np.array(vals).reshape(8,8)
+            if len(vals) == 16:
+                arr = np.array(vals).reshape(4,4)
+                                # right before im.set_data(arr):
+                arr = np.array(vals, dtype=float).reshape(4,4)
+                arr[arr <= 0] = np.nan
+                im.set_data(arr)
+
                 im.set_data(arr)
         return [im]
 
-    ani = animation.FuncAnimation(fig, update, interval=30, blit=True)
+    ani = animation.FuncAnimation(fig, update, interval=50, blit=True)
     plt.show()
 
 if __name__ == "__main__":
